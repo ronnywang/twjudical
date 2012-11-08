@@ -4,24 +4,6 @@ include(__DIR__ . '/../init.inc.php');
 
 class CourtCrawler
 {
-    protected $_courts = null;
-    /**
-     * 取得法院的列表
-     *
-     * @return array
-     */
-    public function getCourts()
-    {
-        if (is_null($this->_courts)) {
-            $this->_courts = array();
-            foreach (file(__DIR__ . '/court', FILE_IGNORE_NEW_LINES) as $court) {
-                list($id, $name) = explode(' ', $court);
-                $this->_courts[$id] = $name;
-            }
-        }
-        return $this->_courts;
-    }
-
     protected $_last_fetch = null;
     protected $_cookies = array();
     /**
@@ -88,7 +70,7 @@ class CourtCrawler
      */
     public function getSearchParams($options = array())
     {
-        $courts = $this->getCourts();
+        $courts = DistrictCourt::getCourts();
         if (!array_key_exists($options['court'], $courts)) {
             throw new Exception("找不到 {$options['court']} 這個地方法院");
         }
@@ -117,47 +99,6 @@ class CourtCrawler
             'v_sys' => $options['type'], // 類型, from getSysTypes()
         );
     }
-
-    /**
-     * 取得單一案件頁的參數
-     *
-     * @param string $case_id 裁判字號 Ex: 89,易,32
-     * @param int $timestamp 裁判日期
-     * @param string $court 法院代號
-     * @param string $type 案件代號
-     * @return array
-     */
-    public function getCaseParams($case_id, $timestamp, $court, $type)
-    {
-        list($year, $word, $no) = explode(',', $case_id);
-        $courts = $this->getCourts();
-        return array(
-            'jrecno' => $case_id . ',' . date('Ymd', $timestamp),
-            'v_court' => $court . ' ' . $courts[$court],
-            'v_sys' => $type,
-            'jyear' => $year,
-            'jcase' => $word,
-            'jno' => $no,
-            'jdate' => date('Ymd', $timestamp) - 19110000,
-            'jcheck' => '',
-        );
-    }
-
-    /**
-     * 取得案件類型
-     *
-     * @return array
-     */
-    public function getSysTypes()
-    {
-        return array(
-            'M' => '刑事',
-            'V' => '民事',
-            'A' => '行政',
-            'P' => '公懲',
-        );
-    }
-
     /**
      * 取得某個月內所有案件
      *
@@ -272,8 +213,8 @@ class CourtCrawler
     {
         foreach (range(2000, 2012) as $year) {
             foreach (range(1, 12) as $month) {
-                foreach ($this->getCourts() as $court_id => $court_name) {
-                    foreach ($this->getSysTypes() as $type_id => $type_name) {
+                foreach (DistrictCourt::getCourts() as $court_id => $court_name) {
+                    foreach (DistrictCourt::getSysTypes() as $type_id => $type_name) {
                         if (DistrictCourtCrawlerLog::search(array('court' => $court_id, 'type' => $type_id, 'year' => $year, 'month' => $month))->first()) {
                             continue;
                         }
