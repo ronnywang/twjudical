@@ -1,12 +1,14 @@
 <?php
 
 include(__DIR__ . '/../init.inc.php');
+Pix_Table::$_save_memory = true;
+ini_set('memory_limit', '1024m');
 
 class CrawlerDetail
 {
-    public function main()
+    public function main($year)
     {
-        foreach (DistrictCourtCase::search(1) as $case) {
+        foreach (DistrictCourtCase::search("case_id LIKE '{$year}%'") as $case) {
             if ($case->getEAV('raw')) {
                 continue;
             }
@@ -101,5 +103,6 @@ class CrawlerDetail
     }
 }
 
+$year = intval($_SERVER['argv'][1]);
 $crawler = new CrawlerDetail;
-$crawler->main();
+$crawler->main($year);

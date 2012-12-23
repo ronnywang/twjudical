@@ -1,6 +1,7 @@
 <?php
 
 include(__DIR__ . '/../init.inc.php');
+Pix_Table::$_save_memory = true;
 
 class CourtCrawler
 {
@@ -128,7 +129,14 @@ class CourtCrawler
 
         while (true) {
             $result = $this->http('GET', $url);
+            // 302 表示失敗， 睡五秒再試一次
+            if (in_array($result->code, array(302, 0, 404, 503))) {
+                sleep(5);
+                continue;
+            }
+
             if (!preg_match('#<TABLE.*</TABLE>#s', $result->body, $matches)) {
+                var_dump($result);
                 throw new Exception("找不到大寫的 TABLE");
             }
 
